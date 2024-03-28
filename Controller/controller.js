@@ -2,6 +2,7 @@ const {  user, movies, upcoming } = require("../Schema/schema.js");
 const JWT = require('jsonwebtoken') 
 const bcrypt = require('bcrypt');
 const verifyEmail = require('./email.js');
+const cron = require('node-cron');
 
 
 
@@ -16,6 +17,20 @@ const getMovies = async(req,res)=>{
         console.log(err)
     }
 }
+
+cron.schedule('0 * * * *', async () => {
+    try {
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000); // One hour ago
+        await user.deleteMany({
+          suspend: true,
+          createdAt: { $lt: oneHourAgo },
+        });
+        
+      } catch (error) {
+        console.error('Error deleting unverified users:', error);
+      }
+  });
+  
 
 const Searchmovie = async(req, res)=>{
     try{
@@ -101,6 +116,7 @@ const Search = async(req, res)=>{
     }
 }
 const getMoviescate = async(req,res)=>{
+
     try{
     const datah = await movies.find({category:"hollywood",series:false})
     const hollywood = datah.reverse().slice(0, 6)
@@ -339,17 +355,6 @@ const loginIn = async(req, res) =>{
 }
 
 const getUser = async (req, res) => {
-    
-        try {
-          const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000); // One hour ago
-          await user.deleteMany({
-            suspend: true,
-            createdAt: { $lt: oneHourAgo },
-          });
-          
-        } catch (error) {
-          console.error('Error deleting unverified users:', error);
-        }
      
     const id = req.params.id;
 
